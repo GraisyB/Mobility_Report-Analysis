@@ -74,3 +74,36 @@ and sub_region_2 is NULL
 ```
 ![image](https://user-images.githubusercontent.com/87647811/126942633-bf0a658a-f921-4130-a8ec-752ac61b6055.png)
 
+* Compare IN US in retail
+```sql
+with country_retail_min_max as 
+(SELECT
+country_region_code
+ ,max(retail_and_recreation_percent_change_from_baseline) as max_retail
+ ,min(retail_and_recreation_percent_change_from_baseline) as min_retail
+--  ,parks_percent_change_from_baseline 
+--  ,transit_stations_percent_change_from_baseline 
+--  ,workplaces_percent_change_from_baseline
+--  ,residential_percent_change_from_baseline
+FROM
+ `bigquery-public-data.covid19_google_mobility.mobility_report`
+where 1=1
+    and country_region_code in ('IN', 'US')
+    and sub_region_1 is NULL 
+    and date > date('2020-04-01')
+group by 1
+)
+
+select *  
+FROM country_retail_min_max retail 
+ join `bigquery-public-data.covid19_google_mobility.mobility_report` mob
+on mob.country_region_code = retail.country_region_code
+    and ( mob.retail_and_recreation_percent_change_from_baseline = retail.max_retail
+    or mob.retail_and_recreation_percent_change_from_baseline = retail.min_retail)
+where 1=1
+    and mob.country_region_code in ('IN', 'US')
+    and sub_region_1 is NULL 
+    and date > date('2020-04-01')
+order by date 
+```
+![image](https://user-images.githubusercontent.com/87647811/126946507-16693ed3-1148-4cd9-ba34-509970672bfe.png)
